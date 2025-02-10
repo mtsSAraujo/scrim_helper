@@ -1,26 +1,64 @@
 package com.scrim_helper.controller;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.URI;
-import java.util.Comparator;
-import java.util.List;
-
 import com.scrim_helper.models.FinalDetails;
 import com.scrim_helper.models.Match;
 import com.scrim_helper.utils.ExcelExporter;
 import com.scrim_helper.utils.JsonParser;
-import org.json.JSONArray;
-import org.json.JSONObject;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Comparator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OpGgScraper {
 
     private static final JsonParser jsonParser = new JsonParser();
 
-    public static void main(String[] args) {
-        String playerId = "81a7e513eebb4ede94439bf89d059520"; // ID do jogador
-        String matchesApiUrl = "https://supervive.op.gg/api/players/steam-" + playerId + "/matches?page=1";
+    public String findPlayerId(String playerName) {
+
+        playerName = playerName.replace("#", "%23");
+        String URL = "https://supervive.op.gg/players/steam-" + playerName;
+
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(URL))
+                    .header("User-Agent", "Mozilla/5.0")
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                String responseBody = response.body();
+
+                Pattern pattern = Pattern.compile("&quot;user_id&quot;:&quot;([a-f0-9]+)&quot;");
+                Matcher matcher = pattern.matcher(responseBody);
+
+                if (matcher.find()) {
+                    String userId = matcher.group(1);
+                    System.out.println("User ID encontrado: " + userId);
+                    return userId;
+                } else {
+                    System.out.println("User ID não encontrado.");
+                }
+            } else {
+                System.out.println("Erro ao buscar os dados: " + response.statusCode());
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public void OpGgWebScraper(String playerId) {
+        final String matchesApiUrl = "https://supervive.op.gg/api/players/steam-" + playerId + "/matches?page=1";
 
         try {
             // Criando cliente HTTP
@@ -51,7 +89,7 @@ public class OpGgScraper {
                     System.out.println("---------------------");
                 }
 
-                String matchId = matches.get(0).getMatchId();
+                String matchId = matches.get(4).getMatchId();
                 fetchMatchDetails(matchId);
             } else {
                 System.out.println("Erro ao buscar os dados: " + response.statusCode());
