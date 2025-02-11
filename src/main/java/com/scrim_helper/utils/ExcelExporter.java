@@ -46,7 +46,6 @@ public class ExcelExporter {
 
         Sheet sheet = workbook.createSheet(sheetName);
 
-        // Criando cabeçalho
         Row headerRow = sheet.createRow(0);
         String[] columns = {"Placement", "Team ID", "Match End", "Hero", "Player", "Kills", "Deaths", "Assists", "KDA", "Damage Done", "Damage Taken", "Heal Done"};
         for (int i = 0; i < columns.length; i++) {
@@ -59,7 +58,6 @@ public class ExcelExporter {
         CellStyle teamStyleWhite = createColoredStyle(workbook, IndexedColors.WHITE.getIndex());
         CellStyle teamStyle = teamStyleGrey;
 
-        // Adicionando os dados das partidas
         int rowNum = 1;
         int playerCount = 0;
 
@@ -94,7 +92,6 @@ public class ExcelExporter {
             playerCount++;
         }
 
-        // Ajustando o tamanho das colunas
         for (int i = 0; i < columns.length; i++) {
             sheet.autoSizeColumn(i);
         }

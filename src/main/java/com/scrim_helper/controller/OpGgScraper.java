@@ -3,6 +3,7 @@ package com.scrim_helper.controller;
 import com.scrim_helper.models.FinalDetails;
 import com.scrim_helper.models.Match;
 import com.scrim_helper.utils.ExcelExporter;
+import com.scrim_helper.utils.GameType;
 import com.scrim_helper.utils.JsonParser;
 
 import java.net.URI;
@@ -61,10 +62,8 @@ public class OpGgScraper {
         final String matchesApiUrl = "https://supervive.op.gg/api/players/steam-" + playerId + "/matches?page=1";
 
         try {
-            // Criando cliente HTTP
             HttpClient client = HttpClient.newHttpClient();
 
-            // Criando requisição GET para obter as partidas
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(matchesApiUrl))
                     .header("User-Agent", "Mozilla/5.0")
@@ -72,25 +71,18 @@ public class OpGgScraper {
                     .GET()
                     .build();
 
-            // Enviando requisição e capturando resposta
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            // Processando JSON de resposta
             if (response.statusCode() == 200) {
                 String responseBody = response.body();
 
                 List<Match> matches = jsonParser.parseMatches(responseBody);
 
-                for (Match match : matches) {
-                    System.out.println("Match ID: " + match.getMatchId());
-                    System.out.println("Início da partida: " + match.getMatchStart());
-                    System.out.println("Herói: " + match.getHeroAssetId());
-                    System.out.println("Kills: " + match.getStats().getKills());
-                    System.out.println("---------------------");
+                for(Match match : matches) {
+                    if(match.getTypeOfMatch() == (GameType.CUSTOM)) {
+                        fetchMatchDetails(match.getMatchId());
+                    }
                 }
-
-                String matchId = matches.get(4).getMatchId();
-                fetchMatchDetails(matchId);
             } else {
                 System.out.println("Erro ao buscar os dados: " + response.statusCode());
             }

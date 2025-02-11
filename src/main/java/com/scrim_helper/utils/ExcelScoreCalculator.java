@@ -1,5 +1,6 @@
 package com.scrim_helper.utils;
 
+import org.apache.commons.math3.util.Pair;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -41,14 +42,12 @@ public class ExcelScoreCalculator {
 
             Map<String, Integer> teamScores = new HashMap<>();
 
-            // Percorrer todas as planilhas "Match X"
             for (Sheet sheet : workbook) {
                 if (sheet.getSheetName().startsWith("Match ")) {
                     processMatchSheet(sheet, teamScores);
                 }
             }
 
-            // Atualizar ou criar a planilha "Total"
             Sheet totalSheet = workbook.getSheet("Total");
             if (totalSheet == null) {
                 totalSheet = workbook.createSheet("Total");
@@ -60,12 +59,12 @@ public class ExcelScoreCalculator {
                 }
             }
 
-            // Criar cabeçalho
             Row headerRow = totalSheet.createRow(0);
             headerRow.createCell(0).setCellValue("TAG");
             headerRow.createCell(1).setCellValue("PONTOS");
+            headerRow.createCell(3).setCellValue("PLAYER");
+            headerRow.createCell(4).setCellValue("KDA");
 
-            // Preencher os dados da tabela "Total"
             int rowNum = 1;
             for (Map.Entry<String, Integer> entry : teamScores.entrySet()) {
                 Row row = totalSheet.createRow(rowNum++);
@@ -73,11 +72,9 @@ public class ExcelScoreCalculator {
                 row.createCell(1).setCellValue(entry.getValue()); // Pontuação total
             }
 
-            // Ajustar colunas
             totalSheet.autoSizeColumn(0);
             totalSheet.autoSizeColumn(1);
 
-            // Salvar as alterações
             try (FileOutputStream fos = new FileOutputStream(filePath)) {
                 workbook.write(fos);
             }
@@ -90,21 +87,24 @@ public class ExcelScoreCalculator {
     }
 
     private static void processMatchSheet(Sheet sheet, Map<String, Integer> teamScores) {
-        // Estrutura para armazenar kills por time
         Map<String, Integer> teamKills = new HashMap<>();
         Map<String, Integer> teamPosition = new HashMap<>();
+        Map<String, Pair<Integer, Double>> playerKDA = new HashMap<>();
 
         int numRows = sheet.getPhysicalNumberOfRows();
 
         for (int i = 1; i < numRows; i++) {
             Row row = sheet.getRow(i);
-            if (row == null) break;
+            if (row == null) continue;
 
-            String teamTag = row.getCell(1).getStringCellValue();
             int position = (int) row.getCell(0).getNumericCellValue();
+            String teamTag = row.getCell(1).getStringCellValue();
+            String playerName = row.getCell(4).getStringCellValue();
             int kills = (int) row.getCell(5).getNumericCellValue();
+            double kda = row.getCell(8).getNumericCellValue();
 
             teamKills.put(teamTag, teamKills.getOrDefault(teamTag, 0) + kills);
+            playerKDA.put(playerName, new Pair<>(position, kda));
 
             teamPosition.putIfAbsent(teamTag, position);
         }

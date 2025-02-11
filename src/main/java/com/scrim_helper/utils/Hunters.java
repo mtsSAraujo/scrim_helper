@@ -2,10 +2,12 @@ package com.scrim_helper.utils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@AllArgsConstructor
 public enum Hunters {
     BRALL("hero:ronin"),
     GHOST("hero:assault"),
@@ -35,10 +37,6 @@ public enum Hunters {
     }
 
     private final String jsonValue;
-
-    Hunters(String jsonValue) {
-        this.jsonValue = jsonValue;
-    }
 
     @JsonValue
     public String getJsonValue() {
